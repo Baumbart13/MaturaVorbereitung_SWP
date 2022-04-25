@@ -11,31 +11,40 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class DbManager {
-    private static DbManager instance;
     private static final Logger logger = LoggerFactory.getLogger(DbManager.class);
 
-    public static DbManager getInstance() {
-        if (instance == null) {
-            instance = new DbManager();
+    public DbManager() {
+        // check if jdbc driver is available
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+        } catch (ClassNotFoundException e) {
+            logger.atError().log("ClassNotFoundException: jdbc driver not found");
         }
-        return instance;
     }
 
-    public Connection getConnection() throws SQLException {
-        return this.getConnection("localhost", "3306", "Holzmann_Matura", "root", "root");
-    }
-
-    public Connection getConnection(String hostname, String port, String database, String username, String password) throws SQLException {
-        var con = DriverManager.getConnection(
-                String.format("jdbc:mysql://%s:%s/%s", hostname, port, database),
-                username,
-                password);
+    public Connection getConnection() {
+        Connection con = null;
+        try {
+            con = DriverManager.getConnection("localhost", "root", "root");
+        } catch (SQLException e) {
+            logger.atError().log("SQLException: Unable to connect to database");
+        }finally{
+            if(con == null){
+                logger.atDebug().log("No connection was created");
+            }else{
+                logger.atDebug().log("Connection was created");
+            }
+        }
         return con;
     }
 
     public void releaseConnection(Connection con) {
         if (con != null) {
             try {
+                if (con.isClosed()) {
+                    logger.atInfo().log("No connection to release");
+                    return;
+                }
                 con.close();
             } catch (SQLException e) {
                 logger.atError().log("SQLException: Cannot release connection");
@@ -45,7 +54,7 @@ public class DbManager {
         logger.atInfo().log("No connection to release");
     }
 
-    public void speichereArtikel(@NotNull Connection con, @NotNull Artikel art) {
+    public void updateArticle(@NotNull Connection con, @NotNull Artikel art) {
         var sql = String.format("INSERT INTO %s" +
                         "(ArtikelId," +
                         "Bezeichnung," +
@@ -88,8 +97,7 @@ public class DbManager {
     }
 
     public Lieferant holeLieferant(Connection con, String name) {
-        /**
-         *
+        /*
          LieferantId int primary key auto_increment,
          Name varchar(128) not null unique,
          Email varchar(255) not null,
