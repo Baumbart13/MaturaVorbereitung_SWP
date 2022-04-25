@@ -1,4 +1,4 @@
-package htlinn.holzmann.models;
+package htlinn.holzmann.server.models;
 
 public class Artikel {
 	public static String TABLE_NAME(){

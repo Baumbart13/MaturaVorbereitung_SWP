@@ -1,7 +1,7 @@
-package htlinn.holzmann.db;
+package htlinn.holzmann.server.db;
 
-import htlinn.holzmann.models.Artikel;
-import htlinn.holzmann.models.Lieferant;
+import htlinn.holzmann.server.models.Artikel;
+import htlinn.holzmann.server.models.Lieferant;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
