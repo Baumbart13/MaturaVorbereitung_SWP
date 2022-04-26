@@ -12,6 +12,7 @@ import java.util.List;
 
 public class DbManager {
     private static final Logger logger = LoggerFactory.getLogger(DbManager.class);
+    private static String DB_NAME = "holzi_matura_db";
 
     public DbManager() {
         // check if jdbc driver is available
@@ -25,7 +26,7 @@ public class DbManager {
     public Connection getConnection() {
         Connection con = null;
         try {
-            con = DriverManager.getConnection("localhost", "root", "root");
+            con = DriverManager.getConnection(String.format("jdbc:mysql://localhost/%s", DB_NAME), "root", "root");
         } catch (SQLException e) {
             logger.atError().log("SQLException: Unable to connect to database");
         }finally{

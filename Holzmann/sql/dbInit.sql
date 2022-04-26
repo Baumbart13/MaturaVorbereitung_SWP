@@ -1,3 +1,6 @@
+CREATE DATABASE holzi_matura_db;
+USE holzi_matura_db;
+
 CREATE TABLE Lieferanten (
 	LieferantId int primary key auto_increment,
 	Name varchar(128) not null unique,
@@ -12,8 +15,7 @@ CREATE TABLE Lieferanten (
 CREATE TABLE Artikel (
 	ArtikelId int primary key auto_increment,
 	Bezeichnung varchar(128) not null,
-	Beschreibung varchar(20000) not null,
+	Beschreibung varchar(10000) not null,
 	VerkaufspreisNetto decimal(10,2) not null,
 	LieferantId int references Lieferanten(LieferantId)
 );
-
