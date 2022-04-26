@@ -1,7 +1,7 @@
 package htlinn.holzmann.server.db;
 
-import htlinn.holzmann.server.models.Artikel;
-import htlinn.holzmann.server.models.Lieferant;
+import htlinn.holzmann.server.models.Article;
+import htlinn.holzmann.server.models.Supplier;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,10 +29,10 @@ public class DbManager {
             con = DriverManager.getConnection(String.format("jdbc:mysql://localhost/%s", DB_NAME), "root", "root");
         } catch (SQLException e) {
             logger.atError().log("SQLException: Unable to connect to database");
-        }finally{
-            if(con == null){
+        } finally {
+            if (con == null) {
                 logger.atDebug().log("No connection was created");
-            }else{
+            } else {
                 logger.atDebug().log("Connection was created");
             }
         }
@@ -55,7 +55,41 @@ public class DbManager {
         logger.atInfo().log("No connection to release");
     }
 
-    public void updateArticle(@NotNull Connection con, @NotNull Artikel art) {
+    public void saveArticle(@NotNull Connection con, @NotNull Article art) {
+        var sql = String.format("INSERT INTO %s" +
+                        "(Artikelid," +
+                        "Bezeichnung," +
+                        "Beschreibung," +
+                        "VerkaufspreisNetto," +
+                        "LieferantId)" +
+                        "VALUES (?, ?, ?, ?, ?);",
+                Article.TABLE_NAME());
+        PreparedStatement stmnt = null;
+        try {
+            stmnt = con.prepareStatement(sql);
+            stmnt.setInt(1, art.getArtikelId());
+            stmnt.setString(2, art.getBezeichnung());
+            stmnt.setString(3, art.getBeschreibung());
+            stmnt.setDouble(4, art.getVerkaufspreisNetto());
+            stmnt.setInt(5, art.getLieferantId());
+            var colCount = stmnt.executeUpdate();
+            if (colCount != 0) {
+                logger.atInfo().log("Article has been saved");
+            }
+        } catch (SQLException e) {
+            logger.atError().log("SQLException: Cannot save article");
+        } finally {
+            if (stmnt != null) {
+                try {
+                    stmnt.close();
+                } catch (SQLException e) {
+                    logger.atError().log("SQLException: Unable to close ResultSet properly");
+                }
+            }
+        }
+    }
+
+    public void updateArticle(@NotNull Connection con, @NotNull Article art) {
         var sql = String.format("INSERT INTO %s" +
                         "(ArtikelId," +
                         "Bezeichnung," +
@@ -68,7 +102,7 @@ public class DbManager {
                         "Beschreibung=?" +
                         "VerkaufspreisNetto=?" +
                         "LieferantId=?;",
-                Artikel.TABLE_NAME());
+                Article.TABLE_NAME());
         PreparedStatement stmnt = null;
         try {
             stmnt = con.prepareStatement(sql);
@@ -85,7 +119,7 @@ public class DbManager {
 
             stmnt.executeUpdate();
         } catch (SQLException e) {
-            logger.atError().log("SQLException: Cannot save article");
+            logger.atError().log("SQLException: Cannot update article");
         } finally {
             if (stmnt != null) {
                 try {
@@ -97,22 +131,11 @@ public class DbManager {
         }
     }
 
-    public Lieferant holeLieferant(Connection con, String name) {
-        /*
-         LieferantId int primary key auto_increment,
-         Name varchar(128) not null unique,
-         Email varchar(255) not null,
-         Ort varchar(128) not null,
-         PLZ varchar(128) not null,
-         Strasze varchar(128) not null,
-         Hnr varchar(128) not null,
-         Land varchar(128) not null
-         */
-
+    public Supplier holeLieferant(Connection con, String name) {
         var sql = String.format(
                 "SELECT LieferantId, Email, Ort, PLZ, Strasse, Hnr, Land" +
-                        "FROM %s WHERE Name=?;", Lieferant.TABLE_NAME());
-        var lieferant = new Lieferant();
+                        "FROM %s WHERE Name=?;", Supplier.TABLE_NAME());
+        var lieferant = new Supplier();
         PreparedStatement stmnt = null;
         ResultSet rs = null;
         try {
@@ -129,7 +152,7 @@ public class DbManager {
             var strasse = rs.getString("Strasse");
             var hnr = rs.getString("Hnr");
             var land = rs.getString("Land");
-            lieferant = new Lieferant(id, name, email, ort, plz, strasse, hnr, land);
+            lieferant = new Supplier(id, name, email, ort, plz, strasse, hnr, land);
             rs.close();
         } catch (SQLException e) {
             logger.atError().addArgument(lieferant.getName()).log("SQLException: Unable to fetch Lieferant {}");
@@ -157,7 +180,7 @@ public class DbManager {
         PreparedStatement stmnt = null;
         ResultSet rs = null;
         try {
-            stmnt = con.prepareStatement(String.format("SELECT Name FROM %s;", Lieferant.TABLE_NAME()));
+            stmnt = con.prepareStatement(String.format("SELECT Name FROM %s;", Supplier.TABLE_NAME()));
             rs = stmnt.executeQuery();
             while (rs.first()) {
                 names.add(rs.getString("Name"));
@@ -184,7 +207,7 @@ public class DbManager {
         return names;
     }
 
-    public List<Artikel> holeArtikelVonLieferant(Connection con, Lieferant l) {
+    public List<Article> holeArtikelVonLieferant(Connection con, Supplier l) {
 
         var sql = "SELECT a.ArtikelId," +
                 "a.Bezeichnung," +
@@ -192,7 +215,7 @@ public class DbManager {
                 "a.VerkaufspreisNetto," +
                 "a.LieferantId FROM Artikel a WHERE a.LieferantId = ?";
 
-        var arts = new LinkedList<Artikel>();
+        var arts = new LinkedList<Article>();
         PreparedStatement stmnt = null;
         ResultSet rs = null;
         try {
@@ -200,7 +223,7 @@ public class DbManager {
             rs = stmnt.executeQuery();
 
             while (rs.next()) {
-                arts.add(new Artikel(
+                arts.add(new Article(
                         rs.getInt(1),
                         rs.getString(2),
                         rs.getString(3),
@@ -229,5 +252,15 @@ public class DbManager {
         }
 
         return arts;
+    }
+
+    public void saveSupplier(Connection con, Supplier l) {
+        try {
+            var stmnt = con.prepareStatement(
+                    "INSERT INTO Lieferanten (LieferantId, Name, Email, Ort, PLZ, Strasse, Hnr, Land) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+
+        }catch(SQLException e) {
+            logger.atError().addArgument(l.getName()).log("SQLException: Unable to save Lieferant {}");
+        }
     }
 }

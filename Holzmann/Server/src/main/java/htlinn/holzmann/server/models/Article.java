@@ -1,6 +1,6 @@
 package htlinn.holzmann.server.models;
 
-public class Artikel {
+public class Article extends ShopEntity {
 	public static String TABLE_NAME(){
 		return "Artikel";
 	}
@@ -10,11 +10,11 @@ public class Artikel {
 	private double verkaufspreisNetto;
 	private int lieferantId;
 
-	public Artikel() {
+	public Article() {
 		this(0, "", "", 0.0, 0);
 	}
 
-	public Artikel(int artikelId, String bezeichnung, String beschreibung, double verkaufspreisNetto, int lieferantId) {
+	public Article(int artikelId, String bezeichnung, String beschreibung, double verkaufspreisNetto, int lieferantId) {
 		setArtikelId(artikelId);
 		setBezeichnung(bezeichnung);
 		setBeschreibung(beschreibung);
