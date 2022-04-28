@@ -61,4 +61,9 @@ public class Article extends ShopEntity {
 	public void setLieferantId(int lieferantId) {
 		this.lieferantId = lieferantId;
 	}
+
+	@Override
+	public String getClassname() {
+		return "Article";
+	}
 }

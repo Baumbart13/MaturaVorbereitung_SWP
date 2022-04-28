@@ -6,18 +6,25 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.*;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Connection;
+import java.sql.DriverManager;
 import java.util.LinkedList;
 import java.util.List;
 
 public class DbManager {
     private static final Logger logger = LoggerFactory.getLogger(DbManager.class);
-    private static String DB_NAME = "holzi_matura_db";
+    private static final String DB_NAME = "holzi_matura_db";
+    private static final String DB_USERNAME = "root";
+    private static final String DB_PASSWORD = "DuArschloch4";
+    private static final String DB_HOSTNAME = "localhost:3306";
 
     public DbManager() {
         // check if jdbc driver is available
         try {
-            Class.forName("com.mysql.jdbc.Driver");
+            Class.forName("com.mysql.cj.jdbc.Driver");
         } catch (ClassNotFoundException e) {
             logger.atError().log("ClassNotFoundException: jdbc driver not found");
         }
@@ -26,9 +33,16 @@ public class DbManager {
     public Connection getConnection() {
         Connection con = null;
         try {
-            con = DriverManager.getConnection(String.format("jdbc:mysql://localhost/%s", DB_NAME), "root", "root");
+        var conString = String.format("jdbc:mysql://%s/%s?useUnicode=true&characterEncoding=utf8&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=UTC",
+                DB_HOSTNAME, DB_NAME);
+        con = DriverManager.getConnection(
+                conString,
+                DB_USERNAME, DB_PASSWORD);
         } catch (SQLException e) {
+            //throw new Exception(e);
             logger.atError().log("SQLException: Unable to connect to database");
+            e.printStackTrace();
+            return con;
         } finally {
             if (con == null) {
                 logger.atDebug().log("No connection was created");
@@ -74,7 +88,7 @@ public class DbManager {
             stmnt.setInt(5, art.getLieferantId());
             var colCount = stmnt.executeUpdate();
             if (colCount != 0) {
-                logger.atInfo().log("Article has been saved");
+                logger.atDebug().log("Article has been saved");
             }
         } catch (SQLException e) {
             logger.atError().log("SQLException: Cannot save article");
@@ -182,7 +196,7 @@ public class DbManager {
         try {
             stmnt = con.prepareStatement(String.format("SELECT Name FROM %s;", Supplier.TABLE_NAME()));
             rs = stmnt.executeQuery();
-            while (rs.first()) {
+            while (rs.next()) {
                 names.add(rs.getString("Name"));
             }
             rs.close();
@@ -255,10 +269,26 @@ public class DbManager {
     }
 
     public void saveSupplier(Connection con, Supplier l) {
+        var supps = this.holeLieferantenNamen(con);
+        if (supps.contains(l.getName())) {
+            logger.atInfo().addArgument(l.getName()).log("Supplier {} already exists");
+            return;
+        }
         try {
             var stmnt = con.prepareStatement(
                     "INSERT INTO Lieferanten (LieferantId, Name, Email, Ort, PLZ, Strasse, Hnr, Land) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-
+            stmnt.setInt(1, l.getLieferantId());
+            stmnt.setString(2, l.getName());
+            stmnt.setString(3, l.getEmail());
+            stmnt.setString(4, l.getOrt());
+            stmnt.setString(5, l.getPlz());
+            stmnt.setString(6, l.getStrasse());
+            stmnt.setString(7, l.getHnr());
+            stmnt.setString(8, l.getLand());
+            var colCount = stmnt.executeUpdate();
+            if(colCount != 0){
+                logger.atDebug().log("Supplier has been saved");
+            }
         }catch(SQLException e) {
             logger.atError().addArgument(l.getName()).log("SQLException: Unable to save Lieferant {}");
         }

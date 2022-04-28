@@ -1,4 +1,5 @@
 package htlinn.holzmann.server.models;
 
-public class ShopEntity {
+public abstract class ShopEntity {
+    public abstract String getClassname();
 }

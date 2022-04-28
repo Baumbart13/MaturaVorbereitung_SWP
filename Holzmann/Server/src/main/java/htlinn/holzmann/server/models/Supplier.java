@@ -90,4 +90,9 @@ public class Supplier extends ShopEntity {
 	public void setLand(String land) {
 		this.land = land;
 	}
+
+	@Override
+	public String getClassname() {
+		return "Supplier";
+	}
 }

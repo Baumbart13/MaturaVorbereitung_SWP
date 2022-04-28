@@ -8,4 +8,21 @@
         <welcome-file>Artikeluebersicht.jsp</welcome-file>
     </welcome-file-list>
 
+    <servlet-mapping>
+        <servlet-name>saveRandomArticleServlet</servlet-name>
+        <url-pattern>/saveRandomArticleServlet</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>saveRandomSupplierServlet</servlet-name>
+        <url-pattern>/saveRandomSupplierServlet</url-pattern>
+    </servlet-mapping>
+    
+    <servlet>
+        <servlet-name>saveRandomSupplierServlet</servlet-name>
+        <servlet-class>htlinn.holzmann.server.servlets.SaveRandomSupplierServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>saveRandomArticleServlet</servlet-name>
+        <servlet-class>htlinn.holzmann.server.servlets.SaveRandomArticleServlet</servlet-class>
+    </servlet>
 </web-app>
